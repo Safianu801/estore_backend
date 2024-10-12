@@ -95,44 +95,43 @@ const userLogin = async (req, res) => {
 const resetUserPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        title: "Missing Fields",
+        message: "Please make sure to provide all required fields",
+      });
+    }
     const user = await User.findOne({ email: email });
-    if (user) {
-      res.status(200).json({
-        title: "Email",
-        message: "Email exists",
+
+    if (!user) {
+      return res.status(404).json({
+        title: "Email Not Found",
+        message: "Email does not exist",
+      });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const encryptedPassword = await bcrypt.hash(newPassword, salt);
+    const updatedUser = await User.findOneAndUpdate(
+      { email: email },
+      { password: encryptedPassword }
+    );
+
+    if (updatedUser) {
+      return res.status(200).json({
+        title: "Password Reset Successful",
+        message: "You have successfully reset your password.",
       });
     } else {
-      if (!email || !newPassword) {
-        res.status(400).json({
-          title: "Missing Fields",
-          message: "Please make sure to provide all required fields",
-        });
-      } else {
-        const salt = await bcrypt.genSalt(10);
-        const encryptedPassword = await bcrypt.hash(newPassword, salt);
-        const resetPassword = new User.findOneAndUpdate(
-          { email: email },
-          { password: encryptedPassword }
-        );
-        if (resetPassword) {
-          res.status(200).json({
-            title: "Password Reset Successful",
-            message:
-              "You have successfully reset your password, you can now proceed to login with the new password",
-          });
-        } else {
-          res.status(400).json({
-            title: "Unable To Reset Password",
-            message:
-              "We are unable to reset your password, please try again later, Thank You.",
-          });
-        }
-      }
+      return res.status(500).json({
+        title: "Unable To Reset Password",
+        message:
+          "We are unable to reset your password, please try again later.",
+      });
     }
-  } catch (e) {
-    res.status(500).json({
+  } catch (error) {
+    return res.status(500).json({
       title: "Server Error",
-      message: `Sever Error`,
+      message: "Internal server error occurred.",
     });
   }
 };
