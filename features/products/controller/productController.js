@@ -44,16 +44,14 @@ const getAllProduct = async (req, res) => {
 const searchProducts = async (req, res) => {
   try {
     let query = {};
-
-    // Check for search parameters in query string
     if (req.query.name) {
-      query.title = { $regex: new RegExp(req.query.name, "i") }; // Case-insensitive search for product name
+      query.title = { $regex: new RegExp(req.query.name, "i") };
     }
     if (req.query.description) {
-      query.description = { $regex: new RegExp(req.query.description, "i") }; // Case-insensitive search for description
+      query.description = { $regex: new RegExp(req.query.description, "i") };
     }
     if (req.query.category) {
-      query.category = { $regex: new RegExp(req.query.category, "i") }; // Case-insensitive search for category
+      query.category = { $regex: new RegExp(req.query.category, "i") };
     }
 
     const products = await Product.find(query);
