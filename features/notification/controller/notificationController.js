@@ -10,7 +10,9 @@ const getAllNotifications = async (req, res) => {
         message: "You are expected to login before you can access this feature",
       });
     } else {
-      const notifications = await notificationModel.find();
+      const notifications = await notificationModel.find({
+        recipient: user.userID,
+      });
       res.status(200).json({
         total: notifications.length,
         data: notifications,
