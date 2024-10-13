@@ -2,6 +2,7 @@ const User = require("../../auth/model/userModel");
 const Product = require("../../products/model/productModel");
 const Cart = require("../model/cartModel");
 const { v4 } = require("uuid");
+const notification = require("../../notification/model/notificationModel");
 
 //add regular product to cart
 const addToCart = async (req, res) => {
@@ -38,11 +39,27 @@ const addToCart = async (req, res) => {
 
         const saveCart = await cartItem.save();
         if (saveCart) {
+          const newNotification = new notification({
+            nID: v4(),
+            title: "Product Added To Cart",
+            message: `You have successfully added ${product.name} to your cart`,
+            image: `${product.image}`,
+            recipient: user.userID,
+          });
+          await newNotification.save();
           res.status(200).json({
             title: "Product Added To Cart",
             message: `You have successfully added ${product.name} to your cart and ready for checkout`,
           });
         } else {
+          const newNotification = new notification({
+            nID: v4(),
+            title: "Failed To Add Product To Cart",
+            message: `You have successfully added ${product.name} to your cart`,
+            image: `${product.image}`,
+            recipient: user.userID,
+          });
+          await newNotification.save();
           res.status(200).json({
             title: "Unable To Added Product To Cart",
             message: `Sorry, we were unable to add ${product.name} to your cart`,
@@ -129,12 +146,28 @@ const deleteCartItem = async (req, res) => {
       } else {
         const deleteItem = await Cart.findOneAndDelete({ itemID: cartId });
         if (deleteItem) {
+          const newNotification = new notification({
+            nID: v4(),
+            title: "Cart Item Deleted",
+            message: `The cart item has been deleted successfully`,
+            image: "",
+            recipient: user.userID,
+          });
+          await newNotification.save();
           res.status(200).json({
             title: "Cart Item Deleted",
             message: "The cart item has been deleted successfully",
           });
         } else {
-          res.status(200).json({
+          const newNotification = new notification({
+            nID: v4(),
+            title: "Unable To Delete Item",
+            message: `The cart item (${item.product.name}) you are trying to delete was unable to be deleted, please try again later, Thank You.`,
+            image: `${item.product.image}`,
+            recipient: user.userID,
+          });
+          await newNotification.save();
+          res.status(400).json({
             title: "Unable To Delete Item",
             message:
               "The cart item you are trying to delete was unable to be deleted, please try again later, Thank You.",
